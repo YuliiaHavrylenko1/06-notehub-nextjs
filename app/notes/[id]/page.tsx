@@ -8,7 +8,12 @@ interface NotePageProps {
 
 export default async function NotePage({ params }: NotePageProps) {
   const queryClient = new QueryClient();
-  const noteId = params.id;  
+
+  const noteId = params.id;
+  if (!noteId) {
+    throw new Error('Invalid note ID');
+  }
+
   await queryClient.prefetchQuery({
     queryKey: ['note', noteId],
     queryFn: () => fetchNoteById(noteId),
