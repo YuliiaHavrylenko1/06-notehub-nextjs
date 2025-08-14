@@ -2,18 +2,18 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchNoteById } from '@/lib/api';
-import { useParams } from 'next/navigation';
 import type { Note } from '@/types/note';
 import css from './NoteDetails.module.css';
 
-export default function NoteDetailsClient() {
-  const params = useParams();
-  const noteId = params.id;
+interface Props {
+  noteId: string;
+}
 
+export default function NoteDetailsClient({ noteId }: Props) {
   const { data: note, isLoading, error } = useQuery<Note>({
     queryKey: ['note', noteId],
-    queryFn: () => fetchNoteById(noteId as string),
-    enabled: Boolean(noteId),
+    queryFn: () => fetchNoteById(noteId),
+    enabled: !!noteId,
   });
 
   if (isLoading) return <p>Loading, please wait...</p>;

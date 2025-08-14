@@ -8,9 +8,9 @@ interface NotePageProps {
 
 export default async function NotePage({ params }: NotePageProps) {
   const queryClient = new QueryClient();
-
   const noteId = params.id;
-  if (!noteId) {
+
+  if (!noteId || Array.isArray(noteId)) {
     throw new Error('Invalid note ID');
   }
 
@@ -21,7 +21,7 @@ export default async function NotePage({ params }: NotePageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NoteDetailsClient />
+      <NoteDetailsClient noteId={noteId} />
     </HydrationBoundary>
   );
 }
