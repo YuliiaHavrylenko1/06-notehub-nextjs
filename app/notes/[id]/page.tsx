@@ -8,8 +8,7 @@ interface NotePageProps {
 
 export default async function NotePage({ params }: NotePageProps) {
   const queryClient = new QueryClient();
-  const noteId = params.id;  // залишаємо як рядок
-
+  const noteId = params.id;  
   await queryClient.prefetchQuery({
     queryKey: ['note', noteId],
     queryFn: () => fetchNoteById(noteId),
