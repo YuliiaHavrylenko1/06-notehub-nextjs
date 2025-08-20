@@ -1,18 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from 'use-debounce';
+import {
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
 import { fetchNotes } from '@/lib/api';
-import  { useDebounce } from 'use-debounce';
+import { Note } from '@/types/note';
+
 import css from './Notes.module.css';
 
 import NoteList from '@/components/NoteList/NoteList';
-import SearchBox from '@/components/SearchBox/SearchBar';
-import Pagination from '@/components/Pagination/pagination';
+import SearchBox from '@/components/SearchBox/SearchBox';
+import Pagination from '@/components/Pagination/Pagination';
 import Modal from '@/components/Modal/Modal';
 import NoteForm from '@/components/NoteForm/NoteForm';
 
-export default function Notes() {
+type FetchNotesResp = {
+  notes: Note[];
+  totalPages: number;
+};
+
+type Props = {
+  notes: Note[];
+  totalPages: number;
+};
+
+export default function NotesClient({ notes: initialNotes, totalPages: initialTotalPages }: Props) {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -21,10 +37,15 @@ export default function Notes() {
   const [debouncedSearch] = useDebounce(searchQuery, 300);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery({
+  
+  const { data, isLoading, isError } = useQuery<FetchNotesResp>({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
-    placeholderData: keepPreviousData,
+    initialData: page === 1 && debouncedSearch === '' ? {
+      notes: initialNotes,
+      totalPages: initialTotalPages,
+    } : undefined,
+    staleTime: 5000,
   });
 
   const handleSearchChange = (value: string) => {
@@ -36,6 +57,8 @@ export default function Notes() {
   const handleNoteCreate = () => {
     setPage(1);
     setIsModalOpen(false);
+    
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
   };
 
   const notes = data?.notes ?? [];
@@ -58,7 +81,11 @@ export default function Notes() {
       {isError && (
         <>
           <p className={css.error}>Failed to load notes. Please try again.</p>
-          <button onClick={() => queryClient.invalidateQueries({ queryKey: ['notes'] })}>
+          <button
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ['notes'] })
+            }
+          >
             Try again ...
           </button>
         </>
@@ -68,7 +95,10 @@ export default function Notes() {
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onSuccess={handleNoteCreate} onCancel={() => setIsModalOpen(false)} />
+          <NoteForm
+            onSuccess={handleNoteCreate}
+            onCancel={() => setIsModalOpen(false)}
+          />
         </Modal>
       )}
     </div>

@@ -1,10 +1,14 @@
 'use client';
 
-export default function NoteError() {
+interface Props {
+  error: Error;  
+}
+
+export default function NoteError({ error }: Props) {
   return (
     <div style={{ padding: 20, textAlign: 'center' }}>
       <h1>Something went wrong</h1>
-      <p>Unable to load the note details.</p>
+      <p>{error.message}</p>
     </div>
   );
 }
